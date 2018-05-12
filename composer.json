@@ -1,0 +1,31 @@
+{
+    "name": "bingcool/tracefy",
+    "description": "tracefy is a link-call trace recording requests",
+    "keywords": [
+        "swoolefy",
+        "swoole",
+        "php",
+        "tracefy",
+        "call"
+    ],
+    "license": "MIT",
+    "type": "project",
+    "authors": [
+        {
+            "name": "bingcool",
+            "email": "2437667702@qq.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "bingcool/swoolefy": "*",
+        "bingcool/swoolefy-zipkin":"dev-master",
+        "mongodb/mongodb":"*"
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    }
+}
