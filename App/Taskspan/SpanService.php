@@ -36,16 +36,43 @@ class SpanService extends TaskController {
 
 		$this->traceId = $local_service_span['traceId'];
 
-		$collection = $this->mongodb->collection('tracespan');
+		$tracespanCollection = $this->mongodb->collection('tracespan');
 
 		$insertData = [
 			'traceId' => $this->traceId,
 			'spans' => json_encode($spans),
+			'spanId' => $local_service_span['id'],
 			'requestUrl' => $local_service_span['name'],
-			'timestamp' => $local_service_span['timestamp']
+			'timestamp' => (int)$local_service_span['timestamp']
 		];
 
-		$inserId = $collection->insertOne($insertData);
+		$inserId = $tracespanCollection->insertOne($insertData);
+		
+		if($inserId) {
+			$traceIdCollection = $this->mongodb->collection('traceIds');
+			$data = [
+						'traceId'=>$this->traceId,
+						'timestamp'=>(int)$local_service_span['timestamp'],
+						'requestUrl'=>$local_service_span['name'],
+						'serverName'=>$local_service_span['annotations'][0]['endpoint']['serviceName']
+				];
+
+			$map = [
+					'traceId'=>$this->traceId,
+					'timestamp'=>['$gt'=>(int)$local_service_span['timestamp']]
+				];
+
+			$result = $traceIdCollection->findOne($map, ['projection'=>['traceId'=>1]]);
+			if($result) {
+				$traceIdCollection->updateOne($map, ['$set'=>$data]);
+			}else {
+				$findResult = $traceIdCollection->findOne(['traceId'=>$this->traceId], ['projection'=>['traceId'=>1]]);
+				// 如果该文档不存在，则创建
+				if(!$findResult) {
+					$insertId = $traceIdCollection->insertOne($data);
+				}
+			}
+		}
 	}
 
 }
