@@ -57,11 +57,6 @@ class SpanService extends TaskController {
 		$insertId = $tracespanCollection->insertOne($insertData);
 		
 		if($insertId) {
-
-			$insertId = $tracespanCollection->insertOne($insertData);
-		}
-		
-		if($insertId) {
 			$traceIdCollection = $this->mongodb->collection('traceIds');
 			$data = [
 						'traceId'=>$this->traceId,
