@@ -80,3 +80,64 @@ Stack trace:
 [2018-05-11 03:44:42 *5646.1]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=12] does not exists.
 [2018-05-11 03:44:50 *5657.2]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=3] does not exists.
 [2018-05-11 06:17:34 *5689.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=5] does not exists.
+[2018-05-14 01:35:45 *5772.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=5] does not exists.
+[2018-05-14 06:23:21 *5821.0]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Uncaught Error: Class 'App\Controller\ZModel' not found in /home/www/tracefy/App/Controller/IndexController.php:90
+Stack trace:
+#0 [internal function]: App\Controller\IndexController->traceSpans()
+#1 /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/HttpRoute.php(229): ReflectionMethod->invoke(Object(App\Controller\IndexController))
+#2 /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/HttpRoute.php(134): Swoolefy\Core\HttpRoute->invoke(NULL, 'IndexCont
+[2018-05-14 06:23:21 $5817.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-14 06:24:43 *5835.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=3] does not exists.
+[2018-05-14 06:24:45 *5833.1]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=6] does not exists.
+[2018-05-14 06:32:05 *5863.1]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=2] does not exists.
+[2018-05-14 06:32:08 *5866.4]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=5] does not exists.
+[2018-05-14 06:32:21 *5865.3]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/SwoolefyException.php on line 23.
+[2018-05-14 06:32:21 $5858.0]	WARNING	swManager_check_exit_status: worker#3 abnormal exit, status=255, signal=0
+[2018-05-14 06:33:16 *5873.0]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 20480 bytes) in /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/SwoolefyException.php on line 23.
+[2018-05-14 06:33:16 $5869.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-14 06:40:19 *5884.0]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Allowed memory size of 16777216 bytes exhausted (tried to allocate 20480 bytes) in /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/SwoolefyException.php on line 23.
+[2018-05-14 06:40:19 $5880.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-14 06:43:10 *5895.0]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 262144 bytes) in Unknown on line 0.
+[2018-05-14 06:43:10 $5891.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-14 06:43:36 *5906.0]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 262144 bytes) in Unknown on line 0.
+[2018-05-14 06:43:36 $5902.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-14 06:44:32 *5917.0]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Allowed memory size of 134217728 bytes exhausted (tried to allocate 262144 bytes) in Unknown on line 0.
+[2018-05-14 06:44:32 $5913.0]	WARNING	swManager_check_exit_status: worker#0 abnormal exit, status=255, signal=0
+[2018-05-14 07:31:43 *5999.1]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=2] does not exists.
+[2018-05-14 07:31:46 *6002.4]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=5] does not exists.
+[2018-05-14 08:29:31 *6099.0]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-14 08:29:31 *6099.0]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-14 09:04:13 *6201.0]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-14 09:04:13 *6201.0]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-14 12:56:27 *6274.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=7] does not exists.
+[2018-05-15 02:01:12 ^6280.6]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Uncaught Error: Cannot access private property MongoDB\UpdateResult::$writeResult in /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/Mongodb/MongodbCollection.php:353
+Stack trace:
+#0 /home/www/tracefy/App/Taskspan/SpanService.php(67): Swoolefy\Core\Mongodb\MongodbCollection->updateOne(Array, Array)
+#1 /home/www/tracefy/vendor/bingcool/swoolefy/score/Http/HttpAppServer.php(67): App\Taskspan\SpanService->spanHander(Array, Object(stdClass))
+#2 /home/www/tra
+[2018-05-15 02:01:12 $6277.0]	WARNING	swManager_check_exit_status: worker#6 abnormal exit, status=255, signal=0
+[2018-05-15 02:03:13 ^6308.6]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Uncaught Error: Cannot access private property MongoDB\UpdateResult::$writeResult in /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/Mongodb/MongodbCollection.php:353
+Stack trace:
+#0 /home/www/tracefy/App/Taskspan/SpanService.php(75): Swoolefy\Core\Mongodb\MongodbCollection->updateOne(Array, Array)
+#1 /home/www/tracefy/vendor/bingcool/swoolefy/score/Http/HttpAppServer.php(67): App\Taskspan\SpanService->spanHander(Array, Object(stdClass))
+#2 /home/www/tra
+[2018-05-15 02:03:13 $6277.0]	WARNING	swManager_check_exit_status: worker#6 abnormal exit, status=255, signal=0
+[2018-05-15 02:10:32 *6331.2]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=3] does not exists.
+[2018-05-15 02:10:33 ^6325.6]	ERROR	zm_deactivate_swoole (ERROR 503): Fatal error: Uncaught Error: Cannot access private property MongoDB\UpdateResult::$writeResult in /home/www/tracefy/vendor/bingcool/swoolefy/score/Core/Mongodb/MongodbCollection.php:353
+Stack trace:
+#0 /home/www/tracefy/App/Taskspan/SpanService.php(75): Swoolefy\Core\Mongodb\MongodbCollection->updateOne(Array, Array)
+#1 /home/www/tracefy/vendor/bingcool/swoolefy/score/Http/HttpAppServer.php(67): App\Taskspan\SpanService->spanHander(Array, Object(stdClass))
+#2 /home/www/tra
+[2018-05-15 02:10:33 $6322.0]	WARNING	swManager_check_exit_status: worker#6 abnormal exit, status=255, signal=0
+[2018-05-15 02:12:23 *6345.2]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=3] does not exists.
+[2018-05-15 02:20:27 *6382.0]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-15 02:20:27 *6382.0]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-15 02:20:28 *6383.1]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=2] does not exists.
+[2018-05-15 02:20:28 *6383.1]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=2] does not exists.
+[2018-05-15 03:08:49 *6474.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-15 03:08:49 *6474.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-15 03:08:49 *6474.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=1] does not exists.
+[2018-05-15 03:08:50 *6475.4]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=4] does not exists.
+[2018-05-15 03:08:50 *6475.4]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=4] does not exists.
+[2018-05-15 03:08:50 *6475.4]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=4] does not exists.
+[2018-05-15 03:30:15 *6487.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=5] does not exists.
