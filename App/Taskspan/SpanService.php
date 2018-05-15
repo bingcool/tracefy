@@ -57,18 +57,23 @@ class SpanService extends TaskController {
 		$insertId = $tracespanCollection->insertOne($insertData);
 		
 		if($insertId) {
+
+			$insertId = $tracespanCollection->insertOne($insertData);
+		}
+		
+		if($insertId) {
 			$traceIdCollection = $this->mongodb->collection('traceIds');
 			$data = [
 						'traceId'=>$this->traceId,
 						'timestamp'=>(int)$local_service_span['timestamp'],
 						'requestUrl'=>$local_service_span['name'],
 						'serverName'=>$local_service_span['annotations'][0]['endpoint']['serviceName']
-				];
+					];
 
-			$map = [
-					'traceId'=>$this->traceId,
-					'timestamp'=>['$gt'=>(int)$local_service_span['timestamp']]
-				];
+			$map =  [
+						'traceId'=>$this->traceId,
+						'timestamp'=>['$gt'=>(int)$local_service_span['timestamp']]
+					];
 
 			$result = $traceIdCollection->findOne($map, ['projection'=>['traceId'=>1]]);
 			if($result) {
