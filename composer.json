@@ -18,9 +18,9 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "bingcool/swoolefy": "*",
-        "bingcool/swoolefy-zipkin":"dev-master",
-        "mongodb/mongodb":"*"
+        "bingcool/swoolefy": "dev-master",
+        "bingcool/swoolefy-zipkin": "dev-master",
+        "mongodb/mongodb": "*"
     },
     "repositories": {
         "packagist": {

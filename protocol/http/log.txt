@@ -142,3 +142,4 @@ Stack trace:
 [2018-05-15 03:08:50 *6475.4]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=4] does not exists.
 [2018-05-15 03:30:15 *6487.3]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=5] does not exists.
 [2018-05-15 05:49:09 *6700.2]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=3] does not exists.
+[2018-05-16 08:53:41 *7029.2]	NOTICE	swFactoryProcess_finish (ERROR 1005): connection[fd=3] does not exists.

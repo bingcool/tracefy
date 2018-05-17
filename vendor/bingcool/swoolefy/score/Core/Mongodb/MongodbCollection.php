@@ -88,7 +88,7 @@ class MongodbCollection {
                     }  
                 }
             }
-        }   
+        }      
         return $result;
     }
 
@@ -322,7 +322,7 @@ class MongodbCollection {
     public function update($filter, $update, array $options = []) {
         $filter = $this->parseFilter($filter);
         $updateResult = $this->collectionInstance->updateMany($filter, $update, $options);
-        $updateId = $updateResult->writeResult->getUpsertedCount();
+        $updateId = $updateResult->getUpsertedCount();
         if($updateId == 0 || $updateId  === false) {
             return false;
         }

@@ -6,12 +6,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/bingcool/swoolefy.git",
-            "reference": "0bcdb0bc94e32840b4d1acfcebbd81ae21b2f038"
+            "reference": "7f08cb9705027106ac392f3be615566b23fd935f"
         },
         "dist": {
             "type": "zip",
-            "url": "https://files.phpcomposer.com/files/bingcool/swoolefy/0bcdb0bc94e32840b4d1acfcebbd81ae21b2f038.zip",
-            "reference": "0bcdb0bc94e32840b4d1acfcebbd81ae21b2f038",
+            "url": "https://files.phpcomposer.com/files/bingcool/swoolefy/7f08cb9705027106ac392f3be615566b23fd935f.zip",
+            "reference": "7f08cb9705027106ac392f3be615566b23fd935f",
             "shasum": ""
         },
         "require": {
@@ -22,7 +22,10 @@
             "smarty/smarty": "3.1.30",
             "swiftmailer/swiftmailer": "6.0.1"
         },
-        "time": "2018-05-11T02:26:03+00:00",
+        "time": "2018-05-17T05:54:14+00:00",
+        "bin": [
+            "bin/swoolefy"
+        ],
         "type": "project",
         "installation-source": "dist",
         "autoload": {
@@ -98,18 +101,18 @@
         "source": {
             "type": "git",
             "url": "https://github.com/bingcool/swoolefy-zipkin.git",
-            "reference": "6994abbc7afd93ea2484883c2f45ecacb99bbd4e"
+            "reference": "1005482dbb4cf4dbe3fe926bfbfb3630dfc467e0"
         },
         "dist": {
             "type": "zip",
-            "url": "https://files.phpcomposer.com/files/bingcool/swoolefy-zipkin/6994abbc7afd93ea2484883c2f45ecacb99bbd4e.zip",
-            "reference": "6994abbc7afd93ea2484883c2f45ecacb99bbd4e",
+            "url": "https://files.phpcomposer.com/files/bingcool/swoolefy-zipkin/1005482dbb4cf4dbe3fe926bfbfb3630dfc467e0.zip",
+            "reference": "1005482dbb4cf4dbe3fe926bfbfb3630dfc467e0",
             "shasum": ""
         },
         "require": {
             "whitemerry/phpkin": "dev-master"
         },
-        "time": "2018-05-03T07:44:29+00:00",
+        "time": "2018-05-12T02:45:53+00:00",
         "type": "project",
         "installation-source": "dist",
         "autoload": {
@@ -143,12 +146,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/doctrine/lexer.git",
-            "reference": "b4f2b2fe5d5726e08a7d46fe3149b577e738463a"
+            "reference": "c0970c7889bfd33504c4fa54f35451c27897381d"
         },
         "dist": {
             "type": "zip",
-            "url": "https://files.phpcomposer.com/files/doctrine/lexer/b4f2b2fe5d5726e08a7d46fe3149b577e738463a.zip",
-            "reference": "b4f2b2fe5d5726e08a7d46fe3149b577e738463a",
+            "url": "https://files.phpcomposer.com/files/doctrine/lexer/c0970c7889bfd33504c4fa54f35451c27897381d.zip",
+            "reference": "c0970c7889bfd33504c4fa54f35451c27897381d",
             "shasum": ""
         },
         "require": {
@@ -157,7 +160,7 @@
         "require-dev": {
             "phpunit/phpunit": "^4.5"
         },
-        "time": "2018-04-24T03:37:48+00:00",
+        "time": "2018-05-14T15:49:16+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -734,12 +737,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/symfony/translation.git",
-            "reference": "e27710d4265d49018db0d7c883913151d353a1e1"
+            "reference": "0f8119b8b6dfb9fdd6f7b8140065b118bb6d51d2"
         },
         "dist": {
             "type": "zip",
-            "url": "https://files.phpcomposer.com/files/symfony/translation/e27710d4265d49018db0d7c883913151d353a1e1.zip",
-            "reference": "e27710d4265d49018db0d7c883913151d353a1e1",
+            "url": "https://files.phpcomposer.com/files/symfony/translation/0f8119b8b6dfb9fdd6f7b8140065b118bb6d51d2.zip",
+            "reference": "0f8119b8b6dfb9fdd6f7b8140065b118bb6d51d2",
             "shasum": ""
         },
         "require": {
@@ -765,7 +768,7 @@
             "symfony/config": "",
             "symfony/yaml": ""
         },
-        "time": "2018-05-07T14:51:25+00:00",
+        "time": "2018-05-16T14:42:13+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {

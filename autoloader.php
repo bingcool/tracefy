@@ -21,7 +21,7 @@ class autoloader {
      * $prefix 自定义的根命名空间
      * @var array
      */
-    private static $root_namespace = ['protocol','App'];
+    private static $root_namespace = ['App','Service','protocol'];
 
     /**
      * @param string $className 
