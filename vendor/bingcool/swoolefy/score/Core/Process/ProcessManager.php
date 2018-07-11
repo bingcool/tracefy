@@ -11,7 +11,7 @@ use Swoolefy\Core\Table\TableManager;
 
 class ProcessManager {
 
-    use \Swoolefy\Core\SingleTrait;
+    use \Swoolefy\Core\SingletonTrait;
 	
 	private static $table_process = [
 		// 进程内存表
@@ -41,7 +41,7 @@ class ProcessManager {
 	 * @param boolean $async
 	 * @param array   $args
 	 */
-	public static function addProcess(string $processName, string $processClass, $async = true,array $args = []) {
+	public static function addProcess(string $processName, string $processClass, $async = true, array $args = []) {
 		if(!TableManager::isExistTable('table_process_map')) {
 			TableManager::getInstance()->createTable(self::$table_process);
 		}

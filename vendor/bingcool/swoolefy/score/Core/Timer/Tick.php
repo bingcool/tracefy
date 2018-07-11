@@ -12,6 +12,7 @@
 namespace Swoolefy\Core\Timer;
 
 use Swoolefy\Core\Swfy;
+use Swoolefy\Core\Application;
 use Swoolefy\Core\Table\TableManager;
 
 class Tick {
@@ -40,7 +41,7 @@ class Tick {
      * @param   array    $params       
      * @return  int              
      */
-	public static function tickTimer($time_interval, $func, $params = null) {
+	public static function tickTimer($time_interval, $func, $params = null, $is_sington = false) {
 		if($time_interval <= 0 || $time_interval > 86400000) {
             throw new \Exception(get_called_class()."::tickTimer() the first params 'time_interval' is requested 0-86400000 ms");
             return false;
@@ -51,7 +52,7 @@ class Tick {
             return false;
         }
 
-        $timer_id = self::tick($time_interval, $func, $params);
+        $timer_id = self::tick($time_interval, $func, $params, $is_sington);
 
         return $timer_id;
 	}
@@ -63,8 +64,8 @@ class Tick {
      * @param   array     $user_params  
      * @return  boolean              
      */
-    public static function tick($time_interval, $func, $user_params = null) {
-        $tid = swoole_timer_tick($time_interval, function($timer_id, $user_params) use($func) {
+    public static function tick($time_interval, $func, $user_params = null, $is_sington = false) {
+        $tid = swoole_timer_tick($time_interval, function($timer_id, $user_params) use($func, $is_sington) {
             $params = [];
             if($user_params) {
                 $params = [$user_params, $timer_id];
@@ -74,14 +75,24 @@ class Tick {
 
             if(is_array($func)) {
                 list($class, $action) = $func;
-                if(self::$_tasks_instances[$timer_id]) {
-                   $tickTaskInstance = swoole_unpack(self::$_tasks_instances[$timer_id]);
+                if($is_sington) {
+                    if(self::$_tasks_instances[$timer_id]) {
+                        $tickTaskInstance = swoole_unpack(self::$_tasks_instances[$timer_id]);
+                    }else {
+                        $tickTaskInstance = new $class;
+                        self::$_tasks_instances[$timer_id] = swoole_pack($tickTaskInstance);
+                    }
+                    if(method_exists("Swoolefy\\Core\\Application", 'setApp')) {
+                        Application::setApp($tickTaskInstance);
+                    }
                 }else {
                     $tickTaskInstance = new $class;
-                    self::$_tasks_instances[$timer_id] = swoole_pack($tickTaskInstance);
                 }
             }
             call_user_func_array([$tickTaskInstance, $action], $params);
+            if(method_exists("Swoolefy\\Core\\Application", 'removeApp')) {
+                Application::removeApp();
+            }
             unset($tickTaskInstance, $class, $action, $user_params, $params, $func);
         }, $user_params);
 
@@ -159,6 +170,9 @@ class Tick {
                 $tickTaskInstance = new $class;
             }
             call_user_func_array([$tickTaskInstance, $action], $params);
+            if(method_exists("Swoolefy\\Core\\Application", 'removeApp')) {
+                Application::removeApp();
+            }
             // 执行完之后,更新目前的一次性任务项
             self::updateRunAfterTick();
             unset($tickTaskInstance, $class, $action, $user_params, $params, $func);

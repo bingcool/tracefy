@@ -16,67 +16,10 @@ use Swoolefy\Core\Swfy;
 trait ComponentTrait {
 
 	/**
-	 * $_destroy_components 请求结束后销毁的对象
+	 * $container 
 	 * @var array
 	 */
-	protected static $_destroy_components = [];
-
-	/**
-	 * __set
-	 * @param    string  $name 
-	 * @param    object  $value
-	 * @return   object
-	 */
-	public function __set($name, $value) {
-		if(isset(Swfy::$Di[$name])) {
-			return Swfy::$Di[$name];
-		}else {
-			if(is_array($value)) {
-				return self::creatObject($name, $value);
-			}
-			return false;
-		}
-	}
-
-	/**
-	 * __get
-	 * @param    string  $name
-	 * @return   object | boolean
-	 */
-	public function __get($name) {
-		if(!isset($this->$name)) {
-			if(isset(Swfy::$Di[$name])) {
-
-				if(is_object(Swfy::$Di[$name])) {	
-					return Swfy::$Di[$name];
-				}else {
-					self::clearComponent($name);
-					return false;
-				}
-
-			}elseif(in_array($name, array_keys(Swfy::$appConfig['components']))) {
-				return self::creatObject($name, Swfy::$appConfig['components'][$name]);
-			}
-			return false;	
-		}
-	}
-
-	/**
-	 * __isset
-	 * @param    string  $name
-	 * @return   boolean
-	 */
-	public function __isset($name) {
-		return isset($this->$name);
-	}
-
-	/**
-	 * __unset
-	 * @param   string  $name
-	 */
-	public function __unset($name) {
-		unset($this->$name);
-	}
+	protected $container = [];
 
 	/**
 	 * creatObject 创建组件对象
@@ -84,10 +27,11 @@ trait ComponentTrait {
 	 * @param    array   $defination     组件定义类
 	 * @return   array
 	 */
-	public function creatObject($com_alias_name = null, array $defination = []) {
+	
+	public function creatObject(string $com_alias_name = null, array $defination = []) {
 		// 动态创建公用组件
 		if($com_alias_name) {
-			if(!isset(Swfy::$Di[$com_alias_name])) {
+			if(!isset($this->container[$com_alias_name])) {
 				if(isset($defination['class'])) {
 					$class = $defination['class'];
 					unset($defination['class']);
@@ -100,22 +44,22 @@ trait ComponentTrait {
 					if(isset($defination[SWOOLEFY_COM_IS_DELAY])) {
 						unset($defination[SWOOLEFY_COM_IS_DELAY]);
 					}
-					return Swfy::$Di[$com_alias_name] = self::buildInstance($class, $defination, $params, $com_alias_name);
+					return $this->container[$com_alias_name] = $this->buildInstance($class, $defination, $params, $com_alias_name);
 				}else {
 					throw new \Exception("component:".$com_alias_name.'must be set class', 1);
 				}
 				
 			}else {
-				return Swfy::$Di[$com_alias_name];
+				return $this->container[$com_alias_name];
 			}
 			
 		}
 		// 配置文件初始化创建公用对象
-		$coreComponents = self::coreComponents();
+		$coreComponents = $this->coreComponents();
 		$components = array_merge($coreComponents, Swfy::$appConfig['components']);
 		foreach($components as $key=>$component) {
 			// 存在直接跳过
-			if(isset(Swfy::$Di[$key]) || (isset($component[SWOOLEFY_COM_IS_DELAY]) && $component[SWOOLEFY_COM_IS_DELAY])) {
+			if(isset($this->container[$key]) || (isset($component[SWOOLEFY_COM_IS_DELAY]) && $component[SWOOLEFY_COM_IS_DELAY])) {
 				continue;
 			}
 			
@@ -129,13 +73,13 @@ trait ComponentTrait {
 				}
 				
 				$defination = $component;
-				Swfy::$Di[$key] = self::buildInstance($class, $defination, $params, $key);
+				$this->container[$key] = $this->buildInstance($class, $defination, $params, $key);
 
 			}else {
-				Swfy::$Di[$key] = false;
+				$this->container[$key] = false;
 			}
 		}
-		return Swfy::$Di;
+		return $this->container;
 
 	}
 
@@ -144,8 +88,7 @@ trait ComponentTrait {
 	 * @param    string  $class
 	 * @return   array      
 	 */
-	protected function getDependencies($class)
-    {
+	protected function getDependencies($class) {
         $dependencies = [];
         $reflection = new \ReflectionClass($class);
 
@@ -168,7 +111,7 @@ trait ComponentTrait {
      * @return  object
      */
 	protected function buildInstance($class, $defination, $params, $com_alias_name) {
-		list ($reflection, $dependencies) = self::getDependencies($class);
+		list ($reflection, $dependencies) = $this->getDependencies($class);
 
         foreach ($params as $index => $param) {
             $dependencies[$index] = $param;
@@ -182,20 +125,18 @@ trait ComponentTrait {
 		
         $object = $reflection->newInstanceArgs($dependencies);
         foreach ($defination as $name => $value) {
-
-        	if($name == SWOOLEFY_COM_IS_DESTROY) {
-				if($value) {
-					array_push(self::$_destroy_components, $com_alias_name);
-				}
-        		continue;
-        	}
-
         	if($name == SWOOLEFY_COM_IS_DELAY) {
         		continue;
         	}
 
-        	if($name == SWOOLEFY_COM_FUNC) {
-        		call_user_func_array([$object, $defination[$name]], [$defination]);
+        	if($name == SWOOLEFY_COM_FUNC) {        		
+        		if(is_string($defination[$name]) && method_exists($object, $defination[$name])) {
+        			call_user_func_array([$object, $defination[$name]], [$defination]);
+        		}else if($defination[$name] instanceof \Closure) {
+        			call_user_func_array($defination[$name]->bindTo($object, get_class($object)), [$defination]);
+        		}else {
+        			throw new \Exception("$com_alias_name component's config item 'func' is not Closure or $com_alias_name instance is not exists the method!");
+        		}
         		continue;
         	}else if(is_array($object->$name)) {
         		$object->$name = array_merge($object->$name, $value);
@@ -210,10 +151,15 @@ trait ComponentTrait {
 
 	/**
 	 * getComponents
-	 * @return   array
+	 * @param    string $com_alias_name
+	 * @return   mixed;
 	 */
-	public function getComponents() {
-		return Swfy::$Di;
+	public function getComponents(string $com_alias_name = null) {
+		if($com_alias_name && isset($this->container[$com_alias_name])) {
+			return $this->container[$com_alias_name];
+		}
+
+		return  $this->container;
 	}
 
 	/**
@@ -221,17 +167,18 @@ trait ComponentTrait {
 	 * @param    string|array  $component_alias_name
 	 * @return   boolean
 	 */
-	public function clearComponent($com_alias_name = null) {    
+	public function clearComponent($com_alias_name = null) {
         if(!is_null($com_alias_name) && is_string($com_alias_name)) {
-       		unset(Swfy::$Di[$com_alias_name]);
-       		return true;
-        }elseif(is_array($com_alias_name)) {
-       		foreach($com_alias_name as $alias_name) {
-       			unset(Swfy::$Di[$alias_name]);
-       		}
-       		return true;
+	        $com_alias_name = (array)$com_alias_name;
+        }else if(is_array($com_alias_name)) {
+        	$com_alias_name = array_unique($com_alias_name);
+        }else {
+        	return false;
         }
-       return false;
+        foreach($com_alias_name as $alias_name) {
+        	unset($this->container[$alias_name]);
+       	}
+        return true;
     }
 
 	/**
@@ -240,5 +187,62 @@ trait ComponentTrait {
 	 */
 	public function coreComponents() {
 		return [];
+	}
+
+	/**
+	 * __set
+	 * @param    string  $name 
+	 * @param    object  $value
+	 * @return   object
+	 */
+	public function __set($name, $value) {
+		if(isset($this->container[$name])) {
+			return $this->container[$name];
+		}else {
+			if(is_array($value)) {
+				return $this->creatObject($name, $value);
+			}
+			return false;
+		}
+	}
+
+	/**
+	 * __get
+	 * @param    string  $name
+	 * @return   object | boolean
+	 */
+	public function __get($name) {
+		if(!isset($this->$name)) {
+			if(isset($this->container[$name])) {
+
+				if(is_object($this->container[$name])) {	
+					return $this->container[$name];
+				}else {
+					$this->clearComponent($name);
+					return false;
+				}
+
+			}elseif(in_array($name, array_keys(Swfy::$appConfig['components']))) {
+				return $this->creatObject($name, Swfy::$appConfig['components'][$name]);
+			}
+			return false;	
+		}
+	}
+
+	/**
+	 * __isset
+	 * @param    string  $name
+	 * @return   boolean
+	 */
+	public function __isset($name) {
+		return isset($this->$name);
+	}
+
+	/**
+	 * __unset
+	 * @param   string  $name
+	 */
+	public function __unset($name) {
+		unset($this->$name);
 	}
 } 

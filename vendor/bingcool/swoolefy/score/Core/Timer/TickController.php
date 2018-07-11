@@ -9,10 +9,8 @@
 +----------------------------------------------------------------------
 */
 
-namespace Swoolefy\Core\Process;
+namespace Swoolefy\Core\Timer;
 
-use Swoolefy\Core\EventController;
-
-class ProcessController extends EventController {
+class TickController extends \Swoolefy\Core\Process\ProcessController {
 	
 }

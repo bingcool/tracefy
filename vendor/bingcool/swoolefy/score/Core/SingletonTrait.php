@@ -11,7 +11,8 @@
 
 namespace Swoolefy\Core;
 
-trait SingleTrait {
+trait SingletonTrait {
+	
     private static $instance;
 
     static function getInstance(...$args)

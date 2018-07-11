@@ -6,12 +6,12 @@
         "source": {
             "type": "git",
             "url": "https://github.com/bingcool/swoolefy.git",
-            "reference": "7f08cb9705027106ac392f3be615566b23fd935f"
+            "reference": "aa78248f43361dc703438b6558c5c6444060afa9"
         },
         "dist": {
             "type": "zip",
-            "url": "https://files.phpcomposer.com/files/bingcool/swoolefy/7f08cb9705027106ac392f3be615566b23fd935f.zip",
-            "reference": "7f08cb9705027106ac392f3be615566b23fd935f",
+            "url": "https://files.phpcomposer.com/files/bingcool/swoolefy/aa78248f43361dc703438b6558c5c6444060afa9.zip",
+            "reference": "aa78248f43361dc703438b6558c5c6444060afa9",
             "shasum": ""
         },
         "require": {
@@ -22,12 +22,12 @@
             "smarty/smarty": "3.1.30",
             "swiftmailer/swiftmailer": "6.0.1"
         },
-        "time": "2018-05-17T05:54:14+00:00",
+        "time": "2018-07-07T04:24:39+00:00",
         "bin": [
             "bin/swoolefy"
         ],
         "type": "project",
-        "installation-source": "dist",
+        "installation-source": "source",
         "autoload": {
             "psr-4": {
                 "Swoolefy\\": "score/"

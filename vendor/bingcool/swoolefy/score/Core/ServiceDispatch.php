@@ -13,6 +13,7 @@ namespace Swoolefy\Core;
 
 use Swoolefy\Core\Swfy;
 use Swoolefy\Core\AppDispatch;
+use Swoolefy\Core\Application;
 
 class ServiceDispatch extends AppDispatch {
 	/**
@@ -36,11 +37,13 @@ class ServiceDispatch extends AppDispatch {
 	/**
 	 * __construct 
 	 */
-	public function __construct($callable, $params) {
+	public function __construct($callable, $params, $rpc_pack_header = []) {
 		// 执行父类
 		parent::__construct();
 		$this->callable = $callable;
 		$this->params = $params;
+		Application::getApp()->mixed_params = $params;
+		Application::getApp()->rpc_pack_header = $rpc_pack_header;
 	}
 
 	/**
@@ -51,8 +54,6 @@ class ServiceDispatch extends AppDispatch {
 		list($class, $action) = $this->callable;
 		$class = trim($class, '/');
 		if(!self::$routeCacheFileMap[$class]) {
-			// 类文件不存在
-			$file = $this->checkClass($class);
 			if(!$this->checkClass($class)){
 				// TODO
 				throw new \Exception("when dispatch, $class file is not exist", 1);
@@ -61,8 +62,11 @@ class ServiceDispatch extends AppDispatch {
 		
 		$class = str_replace('/','\\', $class);
 		$serviceInstance = new $class();
+		$serviceInstance->mixed_params = $this->params;
 		try{
 			$serviceInstance->$action($this->params);
+		}catch(\Exception $e) {
+			throw new \Exception($e->getMessage());
 		}catch(\Exception $e) {
 			throw new \Exception("when dispatch, create $class Instance Fatal error, $class is not exist or $action is not exist!", 1);
 		}

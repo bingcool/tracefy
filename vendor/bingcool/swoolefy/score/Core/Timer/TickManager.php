@@ -17,17 +17,18 @@ use Swoolefy\Core\Table\TableManager;
 
 class TickManager {
 
-	use \Swoolefy\Core\SingleTrait;
+	use \Swoolefy\Core\SingletonTrait;
 
 	/**
 	 * tickTimer 循环定时器
 	 * @param   int    $time_interval
 	 * @param   mixed  $func         
-	 * @param   mixed  $params       
+	 * @param   mixed  $params
+	 * @param   bool   $is_sington  $func是否是单例，默认false
 	 * @return  int
 	 */
-	public static function tickTimer($time_interval, $func, $params = null) {
-		return Tick::tickTimer($time_interval, $func, $params);
+	public static function tickTimer($time_interval, $func, $params = null, $is_sington = false) {
+		return Tick::tickTimer($time_interval, $func, $params, $is_sington);
 	}
 
 	/**

@@ -36,11 +36,12 @@ class IndexController extends BController {
 	 * @return array
 	 */
 	public function getTraceIds() {
-		$start_datetime = $_GET['start_time'];
-		$end_datetime = $_GET['end_time'];
-		$relate_datetime = $_GET['relate_time'];
-		$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-		$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : self::DEFAULT_LIMIT;
+		$params = $this->getRequestParam();
+		$start_datetime = $params['start_time'];
+		$end_datetime = $params['end_time'];
+		$relate_datetime = $params['relate_time'];
+		$page = isset($params['page']) ? (int)$params['page'] : 1;
+		$limit = isset($params['limit']) ? (int)$params['limit'] : self::DEFAULT_LIMIT;
 
 		if($start_datetime && $end_datetime) {
 			$start_datetime = strtotime($start_datetime) * 1000 * 1000;
@@ -77,7 +78,8 @@ class IndexController extends BController {
 	public function traceSpans() {
 		$result = [];
 		$map = [];
-		$traceId = $_GET['traceId'];
+		$params  = $this->getRequestParam();
+		$traceId = $params['traceId'];
 		
 		$tracespanCollection = $this->mongodb->collection('tracespan');
 
