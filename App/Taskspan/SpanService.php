@@ -22,7 +22,6 @@ class SpanService extends TaskController {
 
 	/**
 	 * __construct 
-	 * @param    {String}
 	 */
 	public function __construct() {
 		parent::__construct();

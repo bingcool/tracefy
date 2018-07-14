@@ -9,7 +9,6 @@ class V1Controller extends BController {
 
 	public function span() {
 		$post = $this->getRequestParam();
-		var_dump($post);
 		if(!empty($post)) {
 			TaskManager::asyncTask([\App\Taskspan\SpanService::class, 'spanHander'], $post);
 		} 
