@@ -29,7 +29,6 @@ use MongoDB\Driver\Exception\RuntimeException as DriverRuntimeException;
 use MongoDB\Exception\InvalidArgumentException;
 use MongoDB\Exception\UnexpectedValueException;
 use MongoDB\Exception\UnsupportedException;
-use MongoDB\Model\IndexInfo;
 use MongoDB\Model\IndexInfoIterator;
 use MongoDB\Operation\Aggregate;
 use MongoDB\Operation\BulkWrite;
@@ -40,8 +39,6 @@ use MongoDB\Operation\DeleteOne;
 use MongoDB\Operation\Distinct;
 use MongoDB\Operation\DropCollection;
 use MongoDB\Operation\DropIndexes;
-use MongoDB\Operation\Explain;
-use MongoDB\Operation\Explainable;
 use MongoDB\Operation\Find;
 use MongoDB\Operation\FindOne;
 use MongoDB\Operation\FindOneAndDelete;
@@ -444,7 +441,7 @@ class Collection
      * Drop a single index in the collection.
      *
      * @see DropIndexes::__construct() for supported options
-     * @param string|IndexInfo $indexName Index name or model object
+     * @param string $indexName Index name
      * @param array  $options   Additional options
      * @return array|object Command result document
      * @throws UnsupportedException if options are not supported by the selected server
@@ -497,35 +494,6 @@ class Collection
         }
 
         $operation = new DropIndexes($this->databaseName, $this->collectionName, '*', $options);
-
-        return $operation->execute($server);
-    }
-
-    /**
-     * Explains explainable commands.
-     *
-     * @see Explain::__construct() for supported options
-     * @see http://docs.mongodb.org/manual/reference/command/explain/
-     * @param Explainable $explainable  Command on which to run explain
-     * @param array       $options      Additional options
-     * @return array|object
-     * @throws UnsupportedException if explainable or options are not supported by the selected server
-     * @throws InvalidArgumentException for parameter/option parsing errors
-     * @throws DriverRuntimeException for other driver errors (e.g. connection errors)
-     */
-    public function explain(Explainable $explainable, array $options = [])
-    {
-        if ( ! isset($options['readPreference'])) {
-            $options['readPreference'] = $this->readPreference;
-        }
-
-        if ( ! isset($options['typeMap'])) {
-            $options['typeMap'] = $this->typeMap;
-        }
-
-        $server = $this->manager->selectServer($options['readPreference']);
-
-        $operation = new Explain($this->databaseName, $explainable, $options);
 
         return $operation->execute($server);
     }

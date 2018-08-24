@@ -30,7 +30,7 @@ use MongoDB\Exception\UnsupportedException;
  * @see \MongoDB\Collection::deleteOne()
  * @see http://docs.mongodb.org/manual/reference/command/delete/
  */
-class DeleteMany implements Executable, Explainable
+class DeleteMany implements Executable
 {
     private $delete;
 
@@ -73,10 +73,5 @@ class DeleteMany implements Executable, Explainable
     public function execute(Server $server)
     {
         return $this->delete->execute($server);
-    }
-
-    public function getCommandDocument(Server $server)
-    {
-        return $this->delete->getCommandDocument($server);
     }
 }

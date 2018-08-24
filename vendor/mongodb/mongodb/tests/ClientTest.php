@@ -6,7 +6,6 @@ use MongoDB\Client;
 use MongoDB\Driver\ReadConcern;
 use MongoDB\Driver\ReadPreference;
 use MongoDB\Driver\WriteConcern;
-use MongoDB\Exception\InvalidArgumentException;
 
 /**
  * Unit tests for the Client class.
@@ -21,11 +20,11 @@ class ClientTest extends TestCase
     }
 
     /**
+     * @expectedException MongoDB\Exception\InvalidArgumentException
      * @dataProvider provideInvalidConstructorDriverOptions
      */
     public function testConstructorDriverOptionTypeChecks(array $driverOptions)
     {
-        $this->expectException(InvalidArgumentException::class);
         new Client($this->getUri(), [], $driverOptions);
     }
 

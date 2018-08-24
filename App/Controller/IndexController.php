@@ -123,7 +123,7 @@ class IndexController extends BController {
 
 		$spans[0]['parentId'] = 0;
 
-		$modTree = ZModel::getInstance('App/Common/CategoryTree');
+		$modTree = ZModel::getInstance(\App\Common\CategoryTree::class);
 
 		$tree_result = [];
 

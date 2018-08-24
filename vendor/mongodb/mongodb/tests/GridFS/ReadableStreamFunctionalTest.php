@@ -3,10 +3,8 @@
 namespace MongoDB\Tests\GridFS;
 
 use MongoDB\BSON\Binary;
-use MongoDB\Exception\InvalidArgumentException;
 use MongoDB\GridFS\CollectionWrapper;
 use MongoDB\GridFS\ReadableStream;
-use MongoDB\GridFS\Exception\CorruptFileException;
 use MongoDB\Tests\CommandObserver;
 use stdClass;
 
@@ -50,11 +48,11 @@ class ReadableStreamFunctionalTest extends FunctionalTestCase
     }
 
     /**
+     * @expectedException MongoDB\GridFS\Exception\CorruptFileException
      * @dataProvider provideInvalidConstructorFileDocuments
      */
     public function testConstructorFileDocumentChecks($file)
     {
-        $this->expectException(CorruptFileException::class);
         new ReadableStream($this->collectionWrapper, $file);
     }
 
@@ -136,6 +134,10 @@ class ReadableStreamFunctionalTest extends FunctionalTestCase
         }
     }
 
+    /**
+     * @expectedException MongoDB\GridFS\Exception\CorruptFileException
+     * @expectedExceptionMessage Chunk not found for index "2"
+     */
     public function testReadBytesWithMissingChunk()
     {
         $this->chunksCollection->deleteOne(['files_id' => 'length-10', 'n' => 2]);
@@ -143,11 +145,13 @@ class ReadableStreamFunctionalTest extends FunctionalTestCase
         $fileDocument = $this->collectionWrapper->findFileById('length-10');
         $stream = new ReadableStream($this->collectionWrapper, $fileDocument);
 
-        $this->expectException(CorruptFileException::class);
-        $this->expectExceptionMessage('Chunk not found for index "2"');
         $stream->readBytes(10);
     }
 
+    /**
+     * @expectedException MongoDB\GridFS\Exception\CorruptFileException
+     * @expectedExceptionMessage Expected chunk to have index "1" but found "2"
+     */
     public function testReadBytesWithUnexpectedChunkIndex()
     {
         $this->chunksCollection->deleteOne(['files_id' => 'length-10', 'n' => 1]);
@@ -155,11 +159,13 @@ class ReadableStreamFunctionalTest extends FunctionalTestCase
         $fileDocument = $this->collectionWrapper->findFileById('length-10');
         $stream = new ReadableStream($this->collectionWrapper, $fileDocument);
 
-        $this->expectException(CorruptFileException::class);
-        $this->expectExceptionMessage('Expected chunk to have index "1" but found "2"');
         $stream->readBytes(10);
     }
 
+    /**
+     * @expectedException MongoDB\GridFS\Exception\CorruptFileException
+     * @expectedExceptionMessage Expected chunk to have size "2" but found "1"
+     */
     public function testReadBytesWithUnexpectedChunkSize()
     {
         $this->chunksCollection->updateOne(
@@ -170,17 +176,17 @@ class ReadableStreamFunctionalTest extends FunctionalTestCase
         $fileDocument = $this->collectionWrapper->findFileById('length-10');
         $stream = new ReadableStream($this->collectionWrapper, $fileDocument);
 
-        $this->expectException(CorruptFileException::class);
-        $this->expectExceptionMessage('Expected chunk to have size "2" but found "1"');
         $stream->readBytes(10);
     }
 
+    /**
+     * @expectedException MongoDB\Exception\InvalidArgumentException
+     */
     public function testReadBytesWithNegativeLength()
     {
         $fileDocument = $this->collectionWrapper->findFileById('length-0');
         $stream = new ReadableStream($this->collectionWrapper, $fileDocument);
 
-        $this->expectException(InvalidArgumentException::class);
         $stream->readBytes(-1);
     }
 
@@ -193,13 +199,15 @@ class ReadableStreamFunctionalTest extends FunctionalTestCase
         $this->assertSame('ij', $stream->readBytes(2));
     }
 
+    /**
+     * @expectedException MongoDB\Exception\InvalidArgumentException
+     * @expectedExceptionMessage $offset must be >= 0 and <= 10; given: 11
+     */
     public function testSeekOutOfRange()
     {
         $fileDocument = $this->collectionWrapper->findFileById('length-10');
         $stream = new ReadableStream($this->collectionWrapper, $fileDocument);
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('$offset must be >= 0 and <= 10; given: 11');
         $stream->seek(11);
     }
 

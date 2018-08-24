@@ -34,7 +34,7 @@ use MongoDB\Exception\UnsupportedException;
  * @see \MongoDB\Collection::count()
  * @see http://docs.mongodb.org/manual/reference/command/count/
  */
-class Count implements Executable, Explainable
+class Count implements Executable
 {
     private static $wireVersionForCollation = 5;
     private static $wireVersionForReadConcern = 4;
@@ -151,7 +151,7 @@ class Count implements Executable, Explainable
             throw UnsupportedException::readConcernNotSupported();
         }
 
-        $cursor = $server->executeReadCommand($this->databaseName, new Command($this->createCommandDocument()), $this->createOptions());
+        $cursor = $server->executeReadCommand($this->databaseName, $this->createCommand(), $this->createOptions());
         $result = current($cursor->toArray());
 
         // Older server versions may return a float
@@ -162,17 +162,12 @@ class Count implements Executable, Explainable
         return (integer) $result->n;
     }
 
-    public function getCommandDocument(Server $server)
-    {
-        return $this->createCommandDocument();
-    }
-
     /**
-     * Create the count command document.
+     * Create the count command.
      *
-     * @return array
+     * @return Command
      */
-    private function createCommandDocument()
+    private function createCommand()
     {
         $cmd = ['count' => $this->collectionName];
 
@@ -194,7 +189,7 @@ class Count implements Executable, Explainable
             }
         }
 
-        return $cmd;
+        return new Command($cmd);
     }
 
     /**

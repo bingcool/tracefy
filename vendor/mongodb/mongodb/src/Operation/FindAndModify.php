@@ -35,7 +35,7 @@ use MongoDB\Exception\UnsupportedException;
  * @internal
  * @see http://docs.mongodb.org/manual/reference/command/findAndModify/
  */
-class FindAndModify implements Executable, Explainable
+class FindAndModify implements Executable
 {
     private static $wireVersionForArrayFilters = 6;
     private static $wireVersionForCollation = 5;
@@ -210,7 +210,7 @@ class FindAndModify implements Executable, Explainable
             throw UnsupportedException::writeConcernNotSupported();
         }
 
-        $cursor = $server->executeWriteCommand($this->databaseName, new Command($this->createCommandDocument($server)), $this->createOptions());
+        $cursor = $server->executeWriteCommand($this->databaseName, $this->createCommand($server), $this->createOptions());
         $result = current($cursor->toArray());
 
         if ( ! isset($result->value)) {
@@ -239,17 +239,13 @@ class FindAndModify implements Executable, Explainable
         return $result->value;
     }
 
-    public function getCommandDocument(Server $server)
-    {
-        return $this->createCommandDocument($server);
-    }
-
     /**
-     * Create the findAndModify command document.
+     * Create the findAndModify command.
      *
-     * @return array
+     * @param Server $server
+     * @return Command
      */
-    private function createCommandDocument(Server $server)
+    private function createCommand(Server $server)
     {
         $cmd = ['findAndModify' => $this->collectionName];
 
@@ -278,7 +274,7 @@ class FindAndModify implements Executable, Explainable
             $cmd['bypassDocumentValidation'] = $this->options['bypassDocumentValidation'];
         }
 
-        return $cmd;
+        return new Command($cmd);
     }
 
     /**

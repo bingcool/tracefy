@@ -26,7 +26,7 @@ use MongoDB\Driver\Session;
 use MongoDB\Driver\Exception\RuntimeException as DriverRuntimeException;
 use MongoDB\Exception\InvalidArgumentException;
 use MongoDB\Exception\UnsupportedException;
-use MongoDB\Model\BSONDocument;
+
 /**
  * Operation for the find command.
  *
@@ -35,7 +35,7 @@ use MongoDB\Model\BSONDocument;
  * @see http://docs.mongodb.org/manual/tutorial/query-documents/
  * @see http://docs.mongodb.org/manual/reference/operator/query-modifier/
  */
-class Find implements Executable, Explainable
+class Find implements Executable
 {
     const NON_TAILABLE = 1;
     const TAILABLE = 2;
@@ -85,8 +85,6 @@ class Find implements Executable, Explainable
      *  * maxScan (integer): Maximum number of documents or index keys to scan
      *    when executing the query.
      *
-     *    This option has been deprecated since version 1.4.
-     *
      *  * maxTimeMS (integer): The maximum amount of time to allow the query to
      *    run. If "$maxTimeMS" also exists in the modifiers document, this
      *    option will take precedence.
@@ -129,8 +127,6 @@ class Find implements Executable, Explainable
      *
      *  * snapshot (boolean): Prevents the cursor from returning a document more
      *    than once because of an intervening write operation.
-     *
-     *    This options has been deprecated since version 1.4.
      *
      *  * sort (document): The order in which to return matching documents. If
      *    "$orderby" also exists in the modifiers document, this option will
@@ -263,14 +259,6 @@ class Find implements Executable, Explainable
             unset($options['readConcern']);
         }
 
-        if (isset($options['snapshot'])) {
-            trigger_error('The "snapshot" option is deprecated and will be removed in a future release', E_USER_DEPRECATED);
-        }
-
-        if (isset($options['maxScan'])) {
-            trigger_error('The "maxScan" option is deprecated and will be removed in a future release', E_USER_DEPRECATED);
-        }
-
         $this->databaseName = (string) $databaseName;
         $this->collectionName = (string) $collectionName;
         $this->filter = $filter;
@@ -296,7 +284,7 @@ class Find implements Executable, Explainable
             throw UnsupportedException::readConcernNotSupported();
         }
 
-        $cursor = $server->executeQuery($this->databaseName . '.' . $this->collectionName, new Query($this->filter, $this->createQueryOptions()), $this->createExecuteOptions());
+        $cursor = $server->executeQuery($this->databaseName . '.' . $this->collectionName, $this->createQuery(), $this->createOptions());
 
         if (isset($this->options['typeMap'])) {
             $cursor->setTypeMap($this->options['typeMap']);
@@ -305,58 +293,13 @@ class Find implements Executable, Explainable
         return $cursor;
     }
 
-    public function getCommandDocument(Server $server)
-    {
-        return $this->createCommandDocument();
-    }
-
-    /**
-     * Construct a command document for Find
-     */
-    private function createCommandDocument()
-    {
-        $cmd = ['find' => $this->collectionName, 'filter' => (object) $this->filter];
-
-        $options = $this->createQueryOptions();
-
-        if (empty($options)) {
-            return $cmd;
-        }
-
-        // maxAwaitTimeMS is a Query level option so should not be considered here
-        unset($options['maxAwaitTimeMS']);
-
-        $modifierFallback = [
-            ['allowPartialResults' , 'partial'],
-            ['comment' , '$comment'],
-            ['hint' , '$hint'],
-            ['maxScan' , '$maxScan'],
-            ['max' , '$max'],
-            ['maxTimeMS' , '$maxTimeMS'],
-            ['min' , '$min'],
-            ['returnKey' , '$returnKey'],
-            ['showRecordId' , '$showDiskLoc'],
-            ['sort' , '$orderby'],
-            ['snapshot' , '$snapshot'],
-        ];
-
-        foreach ($modifierFallback as $modifier) {
-            if ( ! isset($options[$modifier[0]]) && isset($options['modifiers'][$modifier[1]])) {
-                $options[$modifier[0]] = $options['modifiers'][$modifier[1]];
-            }
-        }
-        unset($options['modifiers']);
-
-        return $cmd + $options;
-    }
-
     /**
      * Create options for executing the command.
      *
      * @see http://php.net/manual/en/mongodb-driver-server.executequery.php
      * @return array
      */
-    private function createExecuteOptions()
+    private function createOptions()
     {
         $options = [];
 
@@ -372,14 +315,11 @@ class Find implements Executable, Explainable
     }
 
     /**
-     * Create options for the find query.
+     * Create the find query.
      *
-     * Note that these are separate from the options for executing the command,
-     * which are created in createExecuteOptions().
-     *
-     * @return array
+     * @return Query
      */
-    private function createQueryOptions()
+    private function createQuery()
     {
         $options = [];
 
@@ -411,6 +351,6 @@ class Find implements Executable, Explainable
             $options['modifiers'] = $modifiers;
         }
 
-        return $options;
+        return new Query($this->filter, $options);
     }
 }

@@ -2,17 +2,16 @@
 
 namespace MongoDB\Tests\Operation;
 
-use MongoDB\Exception\InvalidArgumentException;
 use MongoDB\Operation\CreateCollection;
 
 class CreateCollectionTest extends TestCase
 {
     /**
+     * @expectedException MongoDB\Exception\InvalidArgumentException
      * @dataProvider provideInvalidConstructorOptions
      */
     public function testConstructorOptionTypeChecks(array $options)
     {
-        $this->expectException(InvalidArgumentException::class);
         new CreateCollection($this->getDatabaseName(), $this->getCollectionName(), $options);
     }
 
@@ -81,16 +80,5 @@ class CreateCollectionTest extends TestCase
         }
 
         return $options;
-    }
-
-    public function testAutoIndexIdOptionIsDeprecated()
-    {
-        $this->assertDeprecated(function() {
-            new CreateCollection($this->getDatabaseName(), $this->getCollectionName(), ['autoIndexId' => true]);
-        });
-
-        $this->assertDeprecated(function() {
-            new CreateCollection($this->getDatabaseName(), $this->getCollectionName(), ['autoIndexId' => false]);
-        });
     }
 }

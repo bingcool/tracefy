@@ -30,7 +30,7 @@ use MongoDB\Exception\UnsupportedException;
  * @see \MongoDB\Collection::updateOne()
  * @see http://docs.mongodb.org/manual/reference/command/update/
  */
-class UpdateOne implements Executable, Explainable
+class UpdateOne implements Executable
 {
     private $update;
 
@@ -103,10 +103,5 @@ class UpdateOne implements Executable, Explainable
     public function execute(Server $server)
     {
         return $this->update->execute($server);
-    }
-
-    public function getCommandDocument(Server $server)
-    {
-        return $this->update->getCommandDocument($server);
     }
 }

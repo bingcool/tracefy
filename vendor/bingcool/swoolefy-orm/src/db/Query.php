@@ -49,6 +49,12 @@ class Query
     // 扩展查询方法
     private static $extend = [];
 
+    /**
+     * 读取主库的表
+     * @var array
+     */
+    private static $readMaster = [];
+
     // 日期查询快捷方式
     protected $timeExp = ['d' => 'today', 'w' => 'week', 'm' => 'month', 'y' => 'year'];
     // 日期查询表达式
@@ -113,7 +119,7 @@ class Query
             $name = Db::parseName(substr($method, 10));
             return $this->where($name, '=', $args[0])->value($args[1]);
         } elseif (strtolower(substr($method, 0, 7)) == 'whereor') {
-            $name = Loader::parseName(substr($method, 7));
+            $name = Db::parseName(substr($method, 7));
             array_unshift($args, $name);
             return call_user_func_array([$this, 'whereOr'], $args);
         } elseif (strtolower(substr($method, 0, 5)) == 'where') {
@@ -197,6 +203,21 @@ class Query
     }
 
     /**
+     * 设置从主库读取数据
+     * @access public
+     * @param  bool $all 是否所有表有效
+     * @return $this
+     */
+    public function readMaster($all = false)
+    {
+        $table = $all ? '*' : $this->getTable();
+
+        static::$readMaster[$table] = true;
+
+        return $this;
+    }
+
+    /**
      * 指定当前数据表名（不含前缀）
      * @access public
      * @param string $name
@@ -223,6 +244,29 @@ class Query
         $name = $name ?: $this->name;
 
         return $this->prefix . Db::parseName($name);
+    }
+
+    /**
+     * 设置字段类型信息
+     * @access public
+     * @param  array $type 字段类型信息
+     * @return $this
+     */
+    public function setJsonFieldType(array $type)
+    {
+        $this->options['field_type'] = $type;
+        return $this;
+    }
+
+    /**
+     * 获取字段类型信息
+     * @access public
+     * @param  string $field 字段名
+     * @return string|null
+     */
+    public function getJsonFieldType($field)
+    {
+        return isset($this->options['field_type'][$field]) ? $this->options['field_type'][$field] : null;
     }
 
     /**
@@ -338,6 +382,62 @@ class Query
     public function transaction($callback)
     {
         return $this->connection->transaction($callback);
+    }
+
+    /**
+     * 执行数据库Xa事务
+     * @access public
+     * @param  callable $callback 数据操作方法回调
+     * @param  array    $dbs      多个查询对象或者连接对象
+     * @return mixed
+     * @throws PDOException
+     * @throws \Exception
+     * @throws \Throwable
+     */
+    public function transactionXa($callback, array $dbs = [])
+    {
+        $xid = uniqid('xa');
+
+        if (empty($dbs)) {
+            $dbs[] = $this->getConnection();
+        }
+
+        foreach ($dbs as $key => $db) {
+            if ($db instanceof Query) {
+                $db = $db->getConnection();
+
+                $dbs[$key] = $db;
+            }
+
+            $db->startTransXa($xid);
+        }
+
+        try {
+            $result = null;
+            if (is_callable($callback)) {
+                $result = call_user_func_array($callback, [$this]);
+            }
+
+            foreach ($dbs as $db) {
+                $db->prepareXa($xid);
+            }
+
+            foreach ($dbs as $db) {
+                $db->commitXa($xid);
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            foreach ($dbs as $db) {
+                $db->rollbackXa($xid);
+            }
+            throw $e;
+        } catch (\Throwable $e) {
+            foreach ($dbs as $db) {
+                $db->rollbackXa($xid);
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -496,13 +596,7 @@ class Query
     {
         $this->parseOptions();
 
-        $result = $this->connection->value($this, $field, $default);
-
-        if (!empty($this->options['fetch_sql'])) {
-            return $result;
-        }
-
-        return $result;
+        return $this->connection->value($this, $field, $default);
     }
 
     /**
@@ -536,7 +630,7 @@ class Query
         if (!empty($this->options['fetch_sql'])) {
             return $result;
         } elseif ($force) {
-            $result += 0;
+            $result = (float) $result;
         }
 
         return $result;
@@ -649,7 +743,7 @@ class Query
      */
     public function setInc($field, $step = 1)
     {
-        return $this->setField($field, ['inc', $field, $step]);
+        return $this->setField($field, ['inc', $step]);
     }
 
     /**
@@ -662,7 +756,7 @@ class Query
      */
     public function setDec($field, $step = 1)
     {
-        return $this->setField($field, ['dec', $field, $step]);
+        return $this->setField($field, ['dec', $step]);
     }
 
     /**
@@ -818,6 +912,9 @@ class Query
         }
 
         if (is_string($field)) {
+            if (preg_match('/[\<\'\"\(]/', $field)) {
+                return $this->fieldRaw($field);
+            }
             $field = array_map('trim', explode(',', $field));
         }
 
@@ -852,6 +949,35 @@ class Query
     }
 
     /**
+     * 表达式方式指定查询字段
+     * @access public
+     * @param  string $field    字段名
+     * @param  array  $bind     参数绑定
+     * @return $this
+     */
+    public function fieldRaw($field, array $bind = [])
+    {
+        $this->options['field'][] = $this->raw($field);
+
+        if ($bind) {
+            $this->bind($bind);
+        }
+
+        return $this;
+    }
+
+    /**
+     * 设置数据排除字段
+     * @access public
+     * @param  mixed $field 字段名或者数据
+     * @return $this
+     */
+    public function hidden($field)
+    {
+        return $this->field($field, true);
+    }
+
+    /**
      * 设置数据
      * @access public
      * @param mixed $field 字段名或者数据
@@ -876,12 +1002,18 @@ class Query
      * @param integer      $step  增长值
      * @return $this
      */
-    public function inc($field, $step = 1)
+    public function inc($field, $step = 1, $op = 'INC')
     {
         $fields = is_string($field) ? explode(',', $field) : $field;
 
-        foreach ($fields as $field) {
-            $this->data($field, ['exp', $field, $step]);
+        foreach ($fields as $field => $val) {
+            if (is_numeric($field)) {
+                $field = $val;
+            } else {
+                $step = $val;
+            }
+
+            $this->data($field, [$op, $step]);
         }
 
         return $this;
@@ -896,13 +1028,7 @@ class Query
      */
     public function dec($field, $step = 1)
     {
-        $fields = is_string($field) ? explode(',', $field) : $field;
-
-        foreach ($fields as $field) {
-            $this->data($field, ['exp', $field, $step]);
-        }
-
-        return $this;
+        return $this->inc($field, $step, 'DEC');
     }
 
     /**
@@ -914,8 +1040,19 @@ class Query
      */
     public function exp($field, $value)
     {
-        $this->data($field, ['exp', $value]);
+        $this->data($field, $this->raw($value));
         return $this;
+    }
+
+    /**
+     * 使用表达式设置数据
+     * @access public
+     * @param  mixed $value 表达式
+     * @return Expression
+     */
+    public function raw($value)
+    {
+        return new Expression($value);
     }
 
     /**
@@ -1004,6 +1141,37 @@ class Query
     }
 
     /**
+     * 指定表达式查询条件
+     * @access public
+     * @param  string $where  查询条件
+     * @param  array  $bind   参数绑定
+     * @param  string $logic  查询逻辑 and or xor
+     * @return $this
+     */
+    public function whereRaw($where, $bind = [], $logic = 'AND')
+    {
+        $this->options['where'][$logic][] = $this->raw($where);
+
+        if ($bind) {
+            $this->bind($bind);
+        }
+
+        return $this;
+    }
+
+    /**
+     * 指定表达式查询条件 OR
+     * @access public
+     * @param  string $where  查询条件
+     * @param  array  $bind   参数绑定
+     * @return $this
+     */
+    public function whereOrRaw($where, $bind = [])
+    {
+        return $this->whereRaw($where, $bind, 'OR');
+    }
+
+    /**
      * 指定OR查询条件
      * @access public
      * @param mixed $field     查询字段
@@ -1042,7 +1210,7 @@ class Query
      */
     public function whereNull($field, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'null', null, [], true);
+        return $this->parseWhereExp($logic, $field, 'NULL', null, [], true);
     }
 
     /**
@@ -1054,7 +1222,7 @@ class Query
      */
     public function whereNotNull($field, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'notnull', null, [], true);
+        return $this->parseWhereExp($logic, $field, 'NOTNULL', null, [], true);
     }
 
     /**
@@ -1066,7 +1234,11 @@ class Query
      */
     public function whereExists($condition, $logic = 'AND')
     {
-        $this->options['where'][strtoupper($logic)][] = ['', 'exists', $condition];
+        if (is_string($condition)) {
+            $condition = $this->raw($condition);
+        }
+
+        $this->options['where'][strtoupper($logic)][] = ['', 'EXISTS', $condition];
         return $this;
     }
 
@@ -1079,7 +1251,11 @@ class Query
      */
     public function whereNotExists($condition, $logic = 'AND')
     {
-        $this->options['where'][strtoupper($logic)][] = ['', 'not exists', $condition];
+        if (is_string($condition)) {
+            $condition = $this->raw($condition);
+        }
+
+        $this->options['where'][strtoupper($logic)][] = ['', 'NOT EXISTS', $condition];
         return $this;
     }
 
@@ -1093,7 +1269,7 @@ class Query
      */
     public function whereIn($field, $condition, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'in', $condition, [], true);
+        return $this->parseWhereExp($logic, $field, 'IN', $condition, [], true);
     }
 
     /**
@@ -1106,7 +1282,7 @@ class Query
      */
     public function whereNotIn($field, $condition, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'not in', $condition, [], true);
+        return $this->parseWhereExp($logic, $field, 'NOT IN', $condition, [], true);
     }
 
     /**
@@ -1119,7 +1295,7 @@ class Query
      */
     public function whereLike($field, $condition, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'like', $condition, [], true);
+        return $this->parseWhereExp($logic, $field, 'LIKE', $condition, [], true);
     }
 
     /**
@@ -1132,7 +1308,7 @@ class Query
      */
     public function whereNotLike($field, $condition, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'not like', $condition, [], true);
+        return $this->parseWhereExp($logic, $field, 'NOT LIKE', $condition, [], true);
     }
 
     /**
@@ -1145,7 +1321,7 @@ class Query
      */
     public function whereBetween($field, $condition, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'between', $condition, [], true);
+        return $this->parseWhereExp($logic, $field, 'BETWEEN', $condition, [], true);
     }
 
     /**
@@ -1158,26 +1334,33 @@ class Query
      */
     public function whereNotBetween($field, $condition, $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'not between', $condition, [], true);
+        return $this->parseWhereExp($logic, $field, 'NOT BETWEEN', $condition, [], true);
     }
 
     /**
      * 比较两个字段
      * @access public
-     * @param string    $field1     查询字段
-     * @param string    $operator   比较操作符
-     * @param string    $field2     比较字段
-     * @param string    $logic      查询逻辑 and or xor
+     * @param string|array  $field1     查询字段
+     * @param string        $operator   比较操作符
+     * @param string        $field2     比较字段
+     * @param string        $logic      查询逻辑 and or xor
      * @return $this
      */
     public function whereColumn($field1, $operator, $field2 = null, $logic = 'AND')
     {
+        if (is_array($field1)) {
+            foreach ($field1 as $item) {
+                $this->whereColumn($item[0], $item[1], isset($item[2]) ? $item[2] : null);
+            }
+            return $this;
+        }
+
         if (is_null($field2)) {
             $field2   = $operator;
             $operator = '=';
         }
 
-        return $this->whereExp($field1, $operator . ' ' . $field2, $logic);
+        return $this->parseWhereExp($logic, $field1, 'COLUMN', [$operator, $field2], [], true);
     }
 
     /**
@@ -1190,7 +1373,7 @@ class Query
     public function useSoftDelete($field, $condition = null)
     {
         if ($field) {
-            $this->options['soft_delete'] = [$field, $condition ?: ['null', '']];
+            $this->options['soft_delete'] = [$field, $condition];
         }
 
         return $this;
@@ -1207,7 +1390,12 @@ class Query
      */
     public function whereExp($field, $condition, array $bind = [], $logic = 'AND')
     {
-        return $this->parseWhereExp($logic, $field, 'exp', $condition, [], true);
+        $this->options['where'][$logic][] = [$field, 'EXP', $this->raw($condition)];
+
+        if ($bind) {
+            $this->bind($bind);
+        }
+        return $this;
     }
 
     /**
@@ -1234,13 +1422,11 @@ class Query
             $field = $this->options['via'] . '.' . $field;
         }
 
-        if ($strict) {
+        if ($field instanceof Expression) {
+            return $this->whereRaw($field, is_array($op) ? $op : []);
+        } elseif ($strict) {
             // 使用严格模式查询
             $where = [$field, $op, $condition];
-            if ('exp' == strtolower($op) && !empty($param)) {
-                // 参数绑定
-                $this->bind($param);
-            }
         } elseif (is_array($field)) {
             // 解析数组批量查询
             return $this->parseArrayWhereItems($field, $logic);
@@ -1248,16 +1434,18 @@ class Query
             $where = $field;
             $field = '';
         } elseif (is_string($field)) {
-            // 解析条件单元
+            if (preg_match('/[,=\<\'\"\(\s]/', $field)) {
+                return $this->whereRaw($field, $op);
+            } elseif (is_string($op) && strtolower($op) == 'exp') {
+                $bind = isset($param[2]) && is_array($param[2]) ? $param[2] : null;
+                return $this->whereExp($field, $condition, $bind, $logic);
+            }
+
             $where = $this->parseWhereItem($logic, $field, $op, $condition, $param);
         }
 
         if (!empty($where)) {
-            if (isset($this->options['where'][$logic][$field])) {
-                $this->options['where'][$logic][] = $where;
-            } else {
-                $this->options['where'][$logic][$field] = $where;
-            }
+            $this->options['where'][$logic][] = $where;
         }
 
         return $this;
@@ -1275,31 +1463,24 @@ class Query
      */
     protected function parseWhereItem($logic, $field, $op, $condition, $param = [])
     {
-        if (preg_match('/[,=\<\'\"\(\s]/', $field)) {
-            $where = ['', 'exp', $field];
-            if (is_array($op)) {
-                // 参数绑定
-                $this->bind($op);
-            }
-        } elseif (is_array($op)) {
+        if (is_array($op)) {
             // 同一字段多条件查询
             array_unshift($param, $field);
             $where = $param;
         } elseif ($field && is_null($condition)) {
-            if (in_array(strtolower($op), ['null', 'notnull', 'not null'])) {
+            if (in_array(strtoupper($op), ['NULL', 'NOTNULL', 'NOT NULL'], true)) {
                 // null查询
                 $where = [$field, $op, ''];
+            } elseif (in_array($op, ['=', 'eq', 'EQ', null], true)) {
+                $where = [$field, 'NULL', ''];
+            } elseif (in_array($op, ['<>', 'neq', 'NEQ'], true)) {
+                $where = [$field, 'NOTNULL', ''];
             } else {
                 // 字段相等查询
-                $where = is_null($op) ? [$field, 'null', ''] : [$field, '=', $op];
+                $where = [$field, '=', $op];
             }
-        } elseif (strtolower($op) == 'exp') {
-            $bind  = isset($param[2]) && is_array($param[2]) ? $param[2] : null;
-            $where = [$field, 'exp', $condition, $bind];
-            if ($bind) {
-                // 参数绑定
-                $this->bind($bind);
-            }
+        } elseif (in_array(strtoupper($op), ['REGEXP', 'NOT REGEXP', 'EXISTS', 'NOT EXISTS', 'NOTEXISTS'], true)) {
+            $where = [$field, $op, is_string($condition) ? $this->raw($condition) : $condition];
         } else {
             $where = $field ? [$field, $op, $condition] : null;
         }
@@ -1319,10 +1500,12 @@ class Query
         if (key($field) !== 0) {
             $where = [];
             foreach ($field as $key => $val) {
-                if (is_null($val)) {
-                    $where[$key] = [$key, 'null', ''];
+                if ($val instanceof Expression) {
+                    $where[] = [$key, 'exp', $val];
+                } elseif (is_null($val)) {
+                    $where[] = [$key, 'NULL', ''];
                 } else {
-                    $where[$key] = !is_scalar($val) ? $val : [$key, '=', $val];
+                    $where[] = [$key, is_array($val) ? 'IN' : '=', $val];
                 }
             }
         } else {
@@ -1348,8 +1531,12 @@ class Query
     {
         $logic = strtoupper($logic);
 
-        if (isset($this->options['where'][$logic][$field])) {
-            unset($this->options['where'][$logic][$field]);
+        if (isset($this->options['where'][$logic])) {
+            foreach ($this->options['where'][$logic] as $key => $val) {
+                if (is_array($val) && $val[0] == $field) {
+                    unset($this->options['where'][$logic][$key]);
+                }
+            }
         }
 
         return $this;
@@ -1578,7 +1765,11 @@ class Query
                 $field = $this->options['via'] . '.' . $field;
             }
 
-            $field = empty($order) ? $field : [$field => $order];
+            if (strpos($field, ',')) {
+                $field = array_map('trim', explode(',', $field));
+            } else {
+                $field = empty($order) ? $field : [$field => $order];
+            }
         } elseif (!empty($this->options['via'])) {
             foreach ($field as $key => $val) {
                 if (is_numeric($key)) {
@@ -1604,6 +1795,24 @@ class Query
     }
 
     /**
+     * 表达式方式指定Field排序
+     * @access public
+     * @param  string $field 排序字段
+     * @param  array  $bind  参数绑定
+     * @return $this
+     */
+    public function orderRaw($field, array $bind = [])
+    {
+        $this->options['order'][] = $this->raw($field);
+
+        if ($bind) {
+            $this->bind($bind);
+        }
+
+        return $this;
+    }
+
+    /**
      * 指定Field排序 order('id',[1,2,3],'desc')
      * @access public
      * @param  string|array $field 排序字段
@@ -1613,9 +1822,12 @@ class Query
      */
     public function orderField($field, array $values = [], $order = '')
     {
-        $values['sort'] = $order;
+        if (!empty($values)) {
+            $values['sort'] = $order;
 
-        $this->options['order'][$field] = $values;
+            $this->options['order'][$field] = $values;
+        }
+
         return $this;
     }
 
@@ -2141,10 +2353,19 @@ class Query
                 if ($relation instanceof \Closure) {
                     $closure  = $relation;
                     $relation = $key;
+                } elseif (!is_int($key)) {
+                    $aggregateField = $relation;
+                    $relation       = $key;
                 }
-                $relation = Loader::parseName($relation, 1, false);
+
+                if (!isset($aggregateField)) {
+                    $aggregateField = Db::parseName($relation) . '_' . $aggregate;
+                }
+
+                $relation = Db::parseName($relation, 1, false);
                 $count    = '(' . $this->model->$relation()->getRelationCountQuery($closure, $aggregate, $field) . ')';
-                $this->field([$count => Loader::parseName($relation) . '_' . $aggregate]);
+
+                $this->field([$count => $aggregateField]);
             }
         }
 
@@ -2869,6 +3090,10 @@ class Query
             if (!isset($options[$name])) {
                 $options[$name] = false;
             }
+        }
+
+        if (isset(static::$readMaster['*']) || (is_string($options['table']) && isset(static::$readMaster[$options['table']]))) {
+            $options['master'] = true;
         }
 
         foreach (['join', 'union', 'group', 'having', 'limit', 'force', 'comment'] as $name) {

@@ -1,10 +1,10 @@
 arg_name: param
 name: $indexName
-type: string| :phpclass:`MongoDB\\Model\\IndexInfo`
+type: string
 description: |
-  The name or model object of the index to drop. View the existing indexes on
-  the collection using the :phpmethod:`listIndexes()
-  <MongoDB\\Collection::listIndexes>` method.
+  The name of the index to drop. View the existing indexes on the collection
+  using the :phpmethod:`listIndexes() <MongoDB\\Collection::listIndexes>`
+  method.
 interface: phpmethod
 operation: ~
 optional: false
