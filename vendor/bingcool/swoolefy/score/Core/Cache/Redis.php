@@ -33,12 +33,39 @@ class Redis {
 	*/
     protected $options = null;
 
+    /**
+     * $is_initConfig 是否已经初始化配置
+     * @var boolean
+     */
+    protected $is_initConfig = false;
+
 	/**
 	 * __construct 
 	 * @param  mixed  $parameters
 	 * @param  ixed   $options
 	 */
 	public function __construct($parameters = null, $options = null) {
+		if($parameters) {
+			$this->Predis = new \Predis\Client($parameters, $options);
+			$this->parameters = $parameters;
+			$this->options = $options;
+			$this->is_initConfig = true;
+		}
+	}
+
+	/**
+	 * setConfig设置配置
+	 * @param array $parameters
+	 * @param array $options
+	 * @param mixed
+	 */
+	public function setConfig($parameters = null, $options = null, ...$args) {
+		if($this->is_initConfig) {
+			return true;
+		}
+		if(is_object($this->Predis)) {
+			unset($this->Predis);
+		}
 		$this->Predis = new \Predis\Client($parameters, $options);
 		$this->parameters = $parameters;
 		$this->options = $options;
@@ -50,7 +77,7 @@ class Redis {
 	 * @param  mixed   $args
 	 * @return mixed
 	 */
-	public function __call($method, $args) {
+	public function __call(string $method, array $args) {
 		// 断线
 		if(!$this->Predis->isConnected()) {
 			// 销毁redis实例

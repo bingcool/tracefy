@@ -100,10 +100,10 @@ class PoolsManager {
 		for($i=1; $i<=$processNumber; $i++) {
             $process_name = $processName.$i;
 			$key = md5($process_name);
-            $args = [$i, $worker_id, $polling, $processName];
+            $new_args = [$i, $worker_id, $polling, $processName, $args];
 	        if(!isset(self::$processList[$key])){
 	            try{
-	                $process = new $processClass($process_name, $async, $args);
+	                $process = new $processClass($process_name, $async, $new_args);
 	                self::$processList[$key] = $process;
                     self::$process_name_list[$processName][$key] = $process;
                     self::$processNameList[$processName][] = $process_name;
@@ -118,7 +118,7 @@ class PoolsManager {
 
         if($polling) {
             self::registerProcessFinish(self::$process_name_list[$processName], $processName);
-            self::$channels[$processName] = new \Swoole\Channel(2 * 1024 * 2014);
+            self::$channels[$processName] = new \Swoole\Channel(5 * 1024 * 1024);
             self::loopWrite($processName, $timer_int);
         }
 
@@ -136,13 +136,13 @@ class PoolsManager {
                     $polling && swoole_event_del(self::$processList[$key]->getProcess()->pipe);
                     unset(self::$processList[$key], self::$process_name_list[$processName][$key]);
                     TableManager::getInstance()->getTable('table_process_pools_number')->del($pid);
-                    $args = [$process_num, $worker_id, $polling, $processName];
+                    $new_args = [$process_num, $worker_id, $polling, $processName, $args];
                     try{
-                        $process = new $processClass($process_name, $async, $args);
+                        $process = new $processClass($process_name, $async, $new_args);
                         self::$processList[$key] = $process;
                         self::$process_name_list[$processName][$key] = $process;
                         $polling && self::registerProcessFinish([$process], $processName);
-                        unset($args, $process_num, $worker_id, $polling, $processName);
+                        unset($process_num, $worker_id, $polling, $processName);
                     }catch (\Exception $e){
                         throw new \Exception($e->getMessage(), 1);       
                     }
@@ -166,14 +166,14 @@ class PoolsManager {
                 // 属于$processName主进程的子进程
                 if(in_array($process_name, self::$processNameList[$processName])) {
                     // 子进程大于0，说明该子进程收到重启的命令，那么将在任务完成后重启
-                    if(isset(self::$process_free[$processName][$process_name]) && $pid = self::$process_free[$processName][$process_name] > 0) {
+                    if(isset(self::$process_free[$processName][$process_name]) && self::$process_free[$processName][$process_name] > 0) {
+                        $pid = self::$process_free[$processName][$process_name];
                         $process->kill($pid, SIGTERM);
                         unset(self::$process_free[$processName][$process_name]);
                     }else {
                         // 正常设置子进程为空闲
                         self::$process_free[$processName][$process_name] = 0;
-                    }
-                    
+                    }   
                 }
             });
         }
@@ -381,5 +381,30 @@ class PoolsManager {
         }else{
             return null;
         }
+    }
+
+    /**
+     * getProcessInWorker 获取一个worker进程内的所有的PoolsProcess进程
+     * @return   array
+     */
+    public function getProcessInWorker() {
+        return self::$processList;
+    }
+
+    /**
+     * killProcessInWorker 在一个worker内的PoolsProcess的进程退出，主要在workerstop中使用，由于PoolsProcess是产生于worker进程的，worker作为父进程，在退出是必须将子进程退出，否则成僵尸进程
+     * @return  bool
+     */
+    public function killProcessInWorker() {
+        $processList = $this->getProcessInWorker();
+        if($processList) {
+            foreach($processList as $process) {
+                $pid = $process->getPid();
+                $process->getProcess()->kill($pid, SIGTERM);
+                \swoole_process::wait();
+            }
+        }
+        return true; 
+        
     }
 }

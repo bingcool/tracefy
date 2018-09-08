@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit797399c3f57c931886570040a6e1bf5c
+class ComposerStaticInit4729e9a669e28481e6fc9b89ffa1d1af
 {
     public static $files = array (
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
@@ -30,6 +30,7 @@ class ComposerStaticInit797399c3f57c931886570040a6e1bf5c
         'S' => 
         array (
             'Symfony\\Polyfill\\Mbstring\\' => 26,
+            'Symfony\\Contracts\\' => 18,
             'Symfony\\Component\\Translation\\' => 30,
             'Swoolefy\\' => 9,
         ),
@@ -69,6 +70,10 @@ class ComposerStaticInit797399c3f57c931886570040a6e1bf5c
         'Symfony\\Polyfill\\Mbstring\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
+        ),
+        'Symfony\\Contracts\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/contracts',
         ),
         'Symfony\\Component\\Translation\\' => 
         array (
@@ -281,10 +286,10 @@ class ComposerStaticInit797399c3f57c931886570040a6e1bf5c
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit797399c3f57c931886570040a6e1bf5c::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit797399c3f57c931886570040a6e1bf5c::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit797399c3f57c931886570040a6e1bf5c::$fallbackDirsPsr4;
-            $loader->classMap = ComposerStaticInit797399c3f57c931886570040a6e1bf5c::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit4729e9a669e28481e6fc9b89ffa1d1af::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit4729e9a669e28481e6fc9b89ffa1d1af::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit4729e9a669e28481e6fc9b89ffa1d1af::$fallbackDirsPsr4;
+            $loader->classMap = ComposerStaticInit4729e9a669e28481e6fc9b89ffa1d1af::$classMap;
 
         }, null, ClassLoader::class);
     }

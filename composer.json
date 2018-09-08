@@ -18,14 +18,14 @@
     ],
     "minimum-stability": "dev",
     "require": {
-        "bingcool/swoolefy": "dev-master",
         "bingcool/swoolefy-zipkin": "dev-master",
-        "mongodb/mongodb": "*"
+        "mongodb/mongodb": "*",
+        "bingcool/swoolefy": "dev-master"
     },
     "repositories": {
         "packagist": {
             "type": "composer",
-            "url": "https://packagist.phpcomposer.com"
+            "url": "https://packagist.laravel-china.org"
         }
     }
 }

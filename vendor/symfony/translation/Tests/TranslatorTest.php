@@ -12,9 +12,9 @@
 namespace Symfony\Component\Translation\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Translation\Translator;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 use Symfony\Component\Translation\MessageCatalogue;
+use Symfony\Component\Translation\Translator;
 
 class TranslatorTest extends TestCase
 {
@@ -234,6 +234,42 @@ class TranslatorTest extends TestCase
         $this->assertEquals('bar', $translator->trans('foo', array(), 'resources'));
     }
 
+    public function testTransWithIcuFallbackLocale()
+    {
+        $translator = new Translator('en_GB');
+        $translator->addLoader('array', new ArrayLoader());
+        $translator->addResource('array', array('foo' => 'foofoo'), 'en_GB');
+        $translator->addResource('array', array('bar' => 'foobar'), 'en_001');
+        $translator->addResource('array', array('baz' => 'foobaz'), 'en');
+        $this->assertSame('foofoo', $translator->trans('foo'));
+        $this->assertSame('foobar', $translator->trans('bar'));
+        $this->assertSame('foobaz', $translator->trans('baz'));
+    }
+
+    public function testTransWithIcuVariantFallbackLocale()
+    {
+        $translator = new Translator('en_GB_scouse');
+        $translator->addLoader('array', new ArrayLoader());
+        $translator->addResource('array', array('foo' => 'foofoo'), 'en_GB_scouse');
+        $translator->addResource('array', array('bar' => 'foobar'), 'en_GB');
+        $translator->addResource('array', array('baz' => 'foobaz'), 'en_001');
+        $translator->addResource('array', array('qux' => 'fooqux'), 'en');
+        $this->assertSame('foofoo', $translator->trans('foo'));
+        $this->assertSame('foobar', $translator->trans('bar'));
+        $this->assertSame('foobaz', $translator->trans('baz'));
+        $this->assertSame('fooqux', $translator->trans('qux'));
+    }
+
+    public function testTransWithIcuRootFallbackLocale()
+    {
+        $translator = new Translator('az_Cyrl');
+        $translator->addLoader('array', new ArrayLoader());
+        $translator->addResource('array', array('foo' => 'foofoo'), 'az_Cyrl');
+        $translator->addResource('array', array('bar' => 'foobar'), 'az');
+        $this->assertSame('foofoo', $translator->trans('foo'));
+        $this->assertSame('bar', $translator->trans('bar'));
+    }
+
     public function testTransWithFallbackLocaleBis()
     {
         $translator = new Translator('en_US');
@@ -297,12 +333,12 @@ class TranslatorTest extends TestCase
 
         $resources = $translator->getCatalogue('en')->getResources();
         $this->assertCount(1, $resources);
-        $this->assertContains(__DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'resources.yml', $resources);
+        $this->assertContains(__DIR__.\DIRECTORY_SEPARATOR.'fixtures'.\DIRECTORY_SEPARATOR.'resources.yml', $resources);
 
         $resources = $translator->getCatalogue('en_GB')->getResources();
         $this->assertCount(2, $resources);
-        $this->assertContains(__DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'empty.yml', $resources);
-        $this->assertContains(__DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'resources.yml', $resources);
+        $this->assertContains(__DIR__.\DIRECTORY_SEPARATOR.'fixtures'.\DIRECTORY_SEPARATOR.'empty.yml', $resources);
+        $this->assertContains(__DIR__.\DIRECTORY_SEPARATOR.'fixtures'.\DIRECTORY_SEPARATOR.'resources.yml', $resources);
     }
 
     /**

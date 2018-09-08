@@ -13,6 +13,7 @@ namespace Swoolefy\Core\Db;
 
 use Think\Db;
 use Swoolefy\Core\Application;
+use Swoolefy\Core\Db\MysqlCoroutine;
 
 class Mysql {
 
@@ -33,52 +34,52 @@ class Mysql {
 	 * @var [type]
 	 */
 	protected $default_config =  [
-			// 数据库类型
-		    'type'            => '',
-		    // 服务器地址
-		    'hostname'        => '',
-		    // 数据库名
-		    'database'        => '',
-		    // 用户名
-		    'username'        => '',
-		    // 密码
-		    'password'        => '',
-		    // 端口
-		    'hostport'        => '',
-		    // 连接dsn
-		    'dsn'             => '',
-		    // 数据库连接参数
-		    'params'          => [],
-		    // 数据库编码默认采用utf8
-		    'charset'         => 'utf8',
-		    // 数据库表前缀
-		    'prefix'          => '',
-		    // 数据库调试模式
-		    'debug'           => false,
-		    // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
-		    'deploy'          => 0,
-		    // 数据库读写是否分离 主从式有效
-		    'rw_separate'     => false,
-		    // 读写分离后 主服务器数量
-		    'master_num'      => 1,
-		    // 指定从服务器序号
-		    'slave_no'        => '',
-		    // 是否严格检查字段是否存在
-		    'fields_strict'   => true,
-		    // 数据集返回类型
-		    'resultset_type'  => '',
-		    // 自动写入时间戳字段
-		    'auto_timestamp'  => false,
-		    // 时间字段取出后的默认时间格式
-		    'datetime_format' => 'Y-m-d H:i:s',
-		    // 是否需要进行SQL性能分析
-		    'sql_explain'     => false,
-		    // Builder类
-		    'builder'         => '',
-		    // Query类
-		    'query'           => '\\think\\db\\Query',
-		    // 是否需要断线重连
-		    'break_reconnect' => true,
+		// 数据库类型
+	    'type'            => '',
+	    // 服务器地址
+	    'hostname'        => '',
+	    // 数据库名
+	    'database'        => '',
+	    // 用户名
+	    'username'        => '',
+	    // 密码
+	    'password'        => '',
+	    // 端口
+	    'hostport'        => '',
+	    // 连接dsn
+	    'dsn'             => '',
+	    // 数据库连接参数
+	    'params'          => [],
+	    // 数据库编码默认采用utf8
+	    'charset'         => 'utf8',
+	    // 数据库表前缀
+	    'prefix'          => '',
+	    // 数据库调试模式
+	    'debug'           => false,
+	    // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
+	    'deploy'          => 0,
+	    // 数据库读写是否分离 主从式有效
+	    'rw_separate'     => false,
+	    // 读写分离后 主服务器数量
+	    'master_num'      => 1,
+	    // 指定从服务器序号
+	    'slave_no'        => '',
+	    // 是否严格检查字段是否存在
+	    'fields_strict'   => true,
+	    // 数据集返回类型
+	    'resultset_type'  => '',
+	    // 自动写入时间戳字段
+	    'auto_timestamp'  => false,
+	    // 时间字段取出后的默认时间格式
+	    'datetime_format' => 'Y-m-d H:i:s',
+	    // 是否需要进行SQL性能分析
+	    'sql_explain'     => false,
+	    // Builder类
+	    'builder'         => '',
+	    // Query类
+	    'query'           => '\\think\\db\\Query',
+	    // 是否需要断线重连
+	    'break_reconnect' => true,
 	];
 
 	/**
@@ -88,9 +89,23 @@ class Mysql {
 	public $query = null;
 
 	/**
+	 * $corMysql mysql的协程客户端
+	 * @var [type]
+	 */
+	public $CMysql;
+
+	/**
 	 * __construct 初始化函数
 	 */
-	public function __construct() {}
+	public function __construct(array $config = []) {
+		if($config) {
+			$db_config = $this->getConfig();
+			if(empty($db_config['type']) && empty($db_config['hostname'])) {
+				$this->config = array_merge($this->default_config, $this->config, $config);
+				Db::setConfig($this->config);
+			}
+		}
+	}
 
 	/**
 	 * getConfig 获取某个配置项
@@ -105,11 +120,14 @@ class Mysql {
 	 * setConfig 设置配置项
 	 * @param array $config
 	 */
-	public function setConfig() {
+	public function setConfig(array $config = []) {
+		if($config) {
+			$this->config = array_merge($this->config, $config);
+		}
 		$db_config = $this->getConfig();
 		if(empty($db_config['type']) && empty($db_config['hostname'])) {
-			$config = array_merge($this->default_config, $this->config);
-			Db::setConfig($config);
+			$this->config = array_merge($this->default_config, $this->config);
+			Db::setConfig($this->config);
 		}
 	}
 
@@ -204,6 +222,19 @@ class Mysql {
 	 */
 	public function connect($config = [], $name = false) {
 		return Db::connect($config, $name);
+	}
+
+	/**
+	 * CorMysql 切换至mysql协程客户端
+	 * @param    array   $extension
+	 * @return   CMysql
+	 */
+	public function selectMysql(array $extension = []) {
+		if(is_object($this->CMysql)) {
+			return $this->CMysql;
+		}
+		$this->CMysql = new MysqlCoroutine($this->getConfig(), $extension);
+		return $this->CMysql;
 	}
 
 	/**

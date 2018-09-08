@@ -10,6 +10,7 @@ return array(
     'whitemerry\\phpkin\\' => array($vendorDir . '/whitemerry/phpkin/src'),
     'think\\' => array($vendorDir . '/bingcool/swoolefy-orm/src'),
     'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),
+    'Symfony\\Contracts\\' => array($vendorDir . '/symfony/contracts'),
     'Symfony\\Component\\Translation\\' => array($vendorDir . '/symfony/translation'),
     'Swoolefy\\' => array($vendorDir . '/bingcool/swoolefy/score'),
     'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
