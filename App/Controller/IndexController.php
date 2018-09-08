@@ -36,7 +36,7 @@ class IndexController extends BController {
 	 * @return array
 	 */
 	public function getTraceIds() {
-		$params = $this->getRequestParam();
+		$params = $this->getRequestParams();
 		$start_datetime = $params['start_time'];
 		$end_datetime = $params['end_time'];
 		$relate_datetime = $params['relate_time'];
