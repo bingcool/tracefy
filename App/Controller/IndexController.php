@@ -78,7 +78,7 @@ class IndexController extends BController {
 	public function traceSpans() {
 		$result = [];
 		$map = [];
-		$params  = $this->getRequestParam();
+		$params  = $this->getRequestParams();
 		$traceId = $params['traceId'];
 		
 		$tracespanCollection = $this->mongodb->collection('tracespan');
@@ -91,7 +91,6 @@ class IndexController extends BController {
 			// 查询
 			$result = $tracespanCollection->find($map, $options);
 		}
-
 		$spans = [];
 		foreach($result as &$document) {
 			$document['spans'] = json_decode($document['spans'], true);

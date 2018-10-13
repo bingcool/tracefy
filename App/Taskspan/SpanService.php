@@ -34,13 +34,14 @@ class SpanService extends TaskController {
 	 */
 	public function spanHander($data) {
 		$spans = [];
-		foreach($data as $k=>$span) {
+		list($post, $get) = json_decode($data, true);
+		foreach($post as $k=>$span) {
+			// 获取每个服务的本地的span
 			if($span['annotations'][0]['value'] == 'sr') {
 				$local_service_span = $span;
 			}
 			$spans[$span['id']] = $span;
 		}
-
 		$this->traceId = $local_service_span['traceId'];
 
 		$tracespanCollection = $this->mongodb->collection('tracespan');
@@ -55,30 +56,16 @@ class SpanService extends TaskController {
 
 		$insertId = $tracespanCollection->insertOne($insertData);
 		
-		if($insertId) {
+		// 最前端的服务,即根服务
+		if($insertId && $get['isFront']) {
 			$traceIdCollection = $this->mongodb->collection('traceIds');
-			$data = [
+			$traceIdInfo = [
 						'traceId'=>$this->traceId,
 						'timestamp'=>(int)$local_service_span['timestamp'],
 						'requestUrl'=>$local_service_span['name'],
 						'serverName'=>$local_service_span['annotations'][0]['endpoint']['serviceName']
 					];
-
-			$map =  [
-						'traceId'=>$this->traceId,
-						'timestamp'=>['$gt'=>(int)$local_service_span['timestamp']]
-					];
-
-			$result = $traceIdCollection->findOne($map, ['projection'=>['traceId'=>1]]);
-			if($result) {
-				$traceIdCollection->updateOne($map, ['$set'=>$data]);
-			}else {
-				$findResult = $traceIdCollection->findOne(['traceId'=>$this->traceId], ['projection'=>['traceId'=>1]]);
-				// 如果该文档不存在，则创建
-				if(!$findResult) {
-					$insertId = $traceIdCollection->insertOne($data);
-				}
-			}
+			$insertId = $traceIdCollection->insertOne($traceIdInfo);
 		}
 	}
 
