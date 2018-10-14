@@ -44,9 +44,9 @@ class IndexController extends BController {
 		$limit = isset($params['limit']) ? (int)$params['limit'] : self::DEFAULT_LIMIT;
 
 		if($start_datetime && $end_datetime) {
-			$start_datetime = strtotime($start_datetime) * 1000 * 1000;
-			$end_datetime = strtotime($end_datetime) * 1000 * 1000;
-			$map['timestamp'] = ['$gte'=>$start_datetime, '$lte'=>$end_datetime];
+			$start_datetime = strtotime($start_datetime) * 1000;
+			$end_datetime = strtotime($end_datetime) * 1000;
+			$map['datetime'] = ['$gte'=>$start_datetime, '$lte'=>$end_datetime];
 		}else {
 			// 前端传递过来的相对时间必须是单位分钟
 			if($relate_datetime) {
@@ -57,16 +57,21 @@ class IndexController extends BController {
 				$relate_datetime = self::DEFAULT_RELATE_DATE;
 			}
 			// 相对现在的时间
-			$map['timestamp'] = ['$gte'=>zipkin_timestamp() - $relate_datetime * 60 * 1000 * 1000]; 
+			$map['datetime'] = ['$gte'=>time() - $relate_datetime * 60 * 1000]; 
 		}
 
 		$traceIdsCollection = $this->mongodb->collection('traceIds');
 		
-		$options['sort'] = ['timestamp' => 1];
+		$options['sort'] = ['datetime' => -1];
 		$options['limit'] = $limit;
 		$options['skip'] = ($page - 1) * $limit;
 
 		$traceIdInfo = $traceIdsCollection->find($map, $options);
+		if(is_array($traceIdInfo) && !empty($traceIdInfo)) {
+			foreach ($traceIdInfo as $key => &$document) {
+				$document['datetime'] = date('Y-m-d H:i:s', $document['datetime']);
+			}
+		}
 		dump($traceIdInfo);
        	return $this->returnJson($traceIdInfo);
 	}
@@ -84,8 +89,6 @@ class IndexController extends BController {
 		$tracespanCollection = $this->mongodb->collection('tracespan');
 
 		$traceId && $map['traceId'] = $traceId;
-
-		$options['sort'] = ['timestamp'=>1];
 		 
 		if($traceId) {
 			// 查询

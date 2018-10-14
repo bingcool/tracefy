@@ -63,7 +63,8 @@ class SpanService extends TaskController {
 						'traceId'=>$this->traceId,
 						'timestamp'=>(int)$local_service_span['timestamp'],
 						'requestUrl'=>$local_service_span['name'],
-						'serverName'=>$local_service_span['annotations'][0]['endpoint']['serviceName']
+						'serverName'=>$local_service_span['annotations'][0]['endpoint']['serviceName'],
+						'datetime' => strtotime('now')
 					];
 			$insertId = $traceIdCollection->insertOne($traceIdInfo);
 		}
