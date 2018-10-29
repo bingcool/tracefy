@@ -18,17 +18,15 @@ class CategoryTree {
 	 */
 	public function getTree($data, $parent_id = 0, $level = 0) {
 		if(empty($data)) {
-			return $this->tree_result;
-		}
-		foreach($data as $k=>$document) {
-			$document['level'] = $level;
-			if(strcmp($document['parentId'], $parent_id) == 0) {
-				$this->tree_result[] = $document;
-				unset($data[$k]);
-				$this->getTree($data, $document['id'], $level+1);
+			foreach($data as $k=>$document) {
+				$document['level'] = $level;
+				if(strcmp($document['parentId'], $parent_id) == 0) {
+					$this->tree_result[] = $document;
+					unset($data[$k]);
+					$this->getTree($data, $document['id'], $level+1);
+				}
 			}
 		}
-
 		return $this->tree_result;
 	}
 
