@@ -89,11 +89,14 @@ class IndexController extends BController {
 		$tracespanCollection = $this->mongodb->collection('tracespan');
 
 		$traceId && $map['traceId'] = $traceId;
-		 
+		
+		$options = [];
+
 		if($traceId) {
 			// 查询
 			$result = $tracespanCollection->find($map, $options);
 		}
+
 		$spans = [];
 		foreach($result as &$document) {
 			$document['spans'] = json_decode($document['spans'], true);
@@ -102,37 +105,49 @@ class IndexController extends BController {
 				array_push($spans, $span);
 			}
 		}
-
 		$count = count($spans);
 		for($i=0; $i<$count; $i++) {
 			for($j=$i+1; $j<$count; $j++) {
 				if($spans[$i]['id'] == $spans[$j]['id']) {
-					$spans[$i]['name'] = $spans[$j]['name'];
-					$new_annotations = [
-						$spans[$i]['annotations'][0],
-						$spans[$j]['annotations'][0],
-						$spans[$j]['annotations'][1],
-						$spans[$i]['annotations'][1],
-					];
-					$spans[$i]['annotations'] = $new_annotations;
-					unset($spans[$j]);
+					if($spans[$i]['id'] == $spans[$i]['parentId']) {
+						$new_annotations = [
+							$spans[$j]['annotations'][0],
+							$spans[$i]['annotations'][1],
+							$spans[$i]['annotations'][0],
+							$spans[$j]['annotations'][1],
+						];
+						$spans[$j]['annotations'] = $new_annotations;
+						unset($spans[$i]);
+					}
+					if($spans[$j]['id'] == $spans[$j]['parentId']) {
+						$new_annotations = [
+							$spans[$i]['annotations'][0],
+							$spans[$j]['annotations'][1],
+							$spans[$j]['annotations'][0],
+							$spans[$i]['annotations'][1],
+						];
+						$spans[$i]['annotations'] = $new_annotations;
+						unset($spans[$j]);
+					}
+
 					break;
 				}
 			}
 		}
-
 		$spans = array_values($spans);
-
-		$spans[0]['parentId'] = 0;
+		foreach($spans as $k=>&$span) {
+			// 获取根span，并设置parentId=0
+			if($span['annotations'][0]['value'] == 'sr') {
+				$span['parentId'] = 0;
+			}		
+		}
 
 		$modTree = ZModel::getInstance(\App\Common\CategoryTree::class);
 
 		$tree_result = [];
 
 		$tree_result = $modTree->getTree($spans, 0, $level = 0);
-
 		dump($tree_result);
-
 		return $this->returnJson($tree_result);
 	}
 

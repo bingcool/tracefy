@@ -9,6 +9,9 @@ class V1Controller extends BController {
 
 	public function span() {
 		$post = $this->getPostParams();
+		if(!$post) {
+			$post = json_decode($this->request->rawContent(), true);
+		}
 		$get = $this->getQueryParams();
 		if(!isset($get['isFront'])) {
 			// 1代表前端 0代表后端

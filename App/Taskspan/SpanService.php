@@ -39,7 +39,7 @@ class SpanService extends TaskController {
 			// 获取每个服务的本地的span
 			if($span['annotations'][0]['value'] == 'sr') {
 				$local_service_span = $span;
-			}
+			}			
 			$spans[$span['id']] = $span;
 		}
 		$this->traceId = $local_service_span['traceId'];
@@ -53,7 +53,7 @@ class SpanService extends TaskController {
 			'requestUrl' => $local_service_span['name'],
 			'timestamp' => (int)$local_service_span['timestamp']
 		];
-
+		
 		$insertId = $tracespanCollection->insertOne($insertData);
 		
 		// 最前端的服务,即根服务

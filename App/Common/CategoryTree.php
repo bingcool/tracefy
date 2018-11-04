@@ -17,7 +17,7 @@ class CategoryTree {
 	 * @return   mixed
 	 */
 	public function getTree($data, $parent_id = 0, $level = 0) {
-		if(empty($data)) {
+		if(!empty($data)) {
 			foreach($data as $k=>$document) {
 				$document['level'] = $level;
 				if(strcmp($document['parentId'], $parent_id) == 0) {

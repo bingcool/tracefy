@@ -34,6 +34,8 @@ return [
 		'dispatch_mode' => 3,
 		'reload_async' => true,
 		'daemonize' => 0,
+		'http_parse_post' => true,
+		'package_max_length' => 5*1024*1024,
 		// 不要更改这个两个配置文件位置
 		'log_file' => __DIR__.'/log.txt',
 		'pid_file' => __DIR__.'/server.pid',
